@@ -7,7 +7,16 @@ type Student struct {
 	Age  int32  `json:"age"`
 }
 
+// Model of exam
 type Exam struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+}
+
+// Model of question
+type Question struct {
+	Id       string `json:"id"`
+	Question string `json:"question"`
+	Answer   string `json:"answer"`
+	ExamId   string `json:"exam_id"`
 }
