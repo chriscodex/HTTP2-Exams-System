@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.20.1
-// source: proto/student.proto
+// source: studentpb/student.proto
 
 package studentpb
 
@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StudentServiceClient interface {
-	// Methods of Student Service (Unary)
+	// Methods Unary
 	GetStudent(ctx context.Context, in *GetStudentRequest, opts ...grpc.CallOption) (*Student, error)
 	SetStudent(ctx context.Context, in *Student, opts ...grpc.CallOption) (*SetStudentResponse, error)
 }
@@ -57,7 +57,7 @@ func (c *studentServiceClient) SetStudent(ctx context.Context, in *Student, opts
 // All implementations must embed UnimplementedStudentServiceServer
 // for forward compatibility
 type StudentServiceServer interface {
-	// Methods of Student Service (Unary)
+	// Methods Unary
 	GetStudent(context.Context, *GetStudentRequest) (*Student, error)
 	SetStudent(context.Context, *Student) (*SetStudentResponse, error)
 	mustEmbedUnimplementedStudentServiceServer()
@@ -139,5 +139,5 @@ var StudentService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/student.proto",
+	Metadata: "studentpb/student.proto",
 }

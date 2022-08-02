@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+// Proto Package
+package exam;
+
+// Go package
+option go_package = "github.com/ChrisCodeX/gRPC;exampb";
+
+message Exam {
+    string id = 1;
+    string name = 2;
+}
+
+// Clients messages
+message GetExamRequest {
+    string id = 1;
+}
+
+// Server messages
+message SetExamResponse {
+    string id = 1;
+}
+
+// Exam service
+service ExamService {
+    /* Methods Unary*/
+    // Client request
+    rpc GetExam(GetExamRequest) returns (Exam);
+    // Server response
+    rpc SetExam(Exam) returns (SetExamResponse);
+}

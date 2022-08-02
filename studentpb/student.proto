@@ -1,8 +1,10 @@
 syntax = "proto3";
 
+// Proto package
 package student;
 
-option go_package = "platzi.com/go/grpc;studentpb";
+// Go package
+option go_package = "github.com/ChrisCodeX/gRPC;studentpb";
 
 message Student {
   string id = 1;
@@ -10,19 +12,19 @@ message Student {
   int32 age = 3;
 }
 
-// Messages from clients
+// Clients Messages
 message GetStudentRequest {
     string id = 1;
 }
 
-// Messages from server
+// Server Messages
 message SetStudentResponse {
     string id = 1;
 }
 
 // Student Service
 service StudentService {
-    // Methods of Student Service (Unary)
+    // Methods Unary
     rpc GetStudent(GetStudentRequest) returns (Student);
     rpc SetStudent(Student) returns (SetStudentResponse);
 }
