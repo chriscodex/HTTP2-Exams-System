@@ -6,26 +6,43 @@ package exam;
 // Go package
 option go_package = "github.com/ChrisCodeX/gRPC;exampb";
 
+// Exam model
 message Exam {
     string id = 1;
     string name = 2;
 }
 
-// Clients messages
+// Question model
+message Question {
+    string id = 1;
+    string question = 2;
+    string answer = 3;
+    string exam_id = 4;
+}
+
+// Clients request messages
 message GetExamRequest {
     string id = 1;
 }
 
-// Server messages
+// Server response messages
 message SetExamResponse {
     string id = 1;
 }
 
+message SetQuestionResponse {
+    bool ok = 1;
+}
+
 // Exam service
 service ExamService {
-    /* Methods Unary*/
+    /* Methods Unary */
     // Client request
     rpc GetExam(GetExamRequest) returns (Exam);
     // Server response
     rpc SetExam(Exam) returns (SetExamResponse);
+
+    /* Stream */
+    // Stream from client - 1 responde from server
+    rpc SetQuestions(stream Question) returns (SetQuestionResponse);
 }
