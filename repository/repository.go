@@ -8,12 +8,15 @@ import (
 
 // Repository interface
 type Repository interface {
-	// Student Service
+	/* Student Service */
 	GetStudent(ctx context.Context, id string) (*models.Student, error)
 	SetStudent(ctx context.Context, student *models.Student) error
-	// Exam Service
+	/* Exam Service */
+	//Unary Methods
 	GetExam(ctx context.Context, id string) (*models.Exam, error)
 	SetExam(ctx context.Context, exam *models.Exam) error
+	// Stream from client
+	SetQuestion(ctx context.Context, question *models.Question) error
 }
 
 // Assign Repository
@@ -45,4 +48,9 @@ func GetExam(ctx context.Context, id string) (*models.Exam, error) {
 // Insert a Exam
 func SetExam(ctx context.Context, exam *models.Exam) error {
 	return implementation.SetExam(ctx, exam)
+}
+
+// Insert Questions
+func SetQuestion(ctx context.Context, question *models.Question) error {
+	return implementation.SetQuestion(ctx, question)
 }

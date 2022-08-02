@@ -14,7 +14,7 @@ type PostgresRepository struct {
 }
 
 // Constructor of Postgres Repository
-func NewPostgreRepository(url string) (*PostgresRepository, error) {
+func NewPostgresRepository(url string) (*PostgresRepository, error) {
 	db, err := sql.Open("postgres", url)
 	if err != nil {
 		return nil, err
@@ -89,5 +89,12 @@ func (repo *PostgresRepository) GetExam(ctx context.Context, id string) (*models
 func (repo *PostgresRepository) SetExam(ctx context.Context, exam *models.Exam) error {
 	_, err := repo.db.ExecContext(ctx, "INSERT INTO exams (id, name) VALUES ($1, $2)",
 		exam.Id, exam.Name)
+	return err
+}
+
+// Insert a question into the database
+func (repo *PostgresRepository) SetQuestion(ctx context.Context, question *models.Question) error {
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO questions (id, question, answer, exam_id) VALUES ($1, $2, $3, $4)",
+		question.Id, question.Question, question.Answer, question.ExamId)
 	return err
 }
