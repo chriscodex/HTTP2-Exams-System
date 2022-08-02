@@ -24,7 +24,8 @@ func NewPostgreRepository(url string) (*PostgresRepository, error) {
 
 // Methods
 
-// Get student from database sending the id
+/*Student Service*/
+// Get student from database by id
 func (repo *PostgresRepository) GetStudent(ctx context.Context, id string) (*models.Student, error) {
 	// Query
 	rows, err := repo.db.QueryContext(ctx, "SELECT id, name, age FROM students WHERE id = $1", id)
@@ -54,5 +55,39 @@ func (repo *PostgresRepository) GetStudent(ctx context.Context, id string) (*mod
 func (repo *PostgresRepository) SetStudent(ctx context.Context, student *models.Student) error {
 	_, err := repo.db.ExecContext(ctx, "INSERT INTO students (id, name, age) VALUES ($1, $2, $3)",
 		student.Id, student.Name, student.Age)
+	return err
+}
+
+/*Exams Service*/
+// Get exam by id
+func (repo *PostgresRepository) GetExam(ctx context.Context, id string) (*models.Exam, error) {
+	// Query
+	rows, err := repo.db.QueryContext(ctx, "SELECT id, name FROM exams WHERE id = $1", id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Stop reading rows
+	defer CloseReadingRows(rows)
+
+	// Map rows values of the query into the students struct
+	var exam = models.Exam{}
+
+	for rows.Next() {
+		if err = rows.Scan(&exam.Id, &exam.Name); err != nil {
+			return &exam, nil
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return &exam, err
+	}
+
+	return &exam, nil
+}
+
+// Insert a exam into the database
+func (repo *PostgresRepository) SetExam(ctx context.Context, exam *models.Exam) error {
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO exams (id, name) VALUES ($1, $2)",
+		exam.Id, exam.Name)
 	return err
 }

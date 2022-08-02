@@ -5,3 +5,10 @@ CREATE TABLE students (
     name VARCHAR(255) NOT NULL,
     age INTEGER NOT NULL
 );
+
+DROP TABLE IF EXISTS exams;
+
+CREATE TABLE exams (
+    id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
