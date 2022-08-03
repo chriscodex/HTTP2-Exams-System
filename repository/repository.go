@@ -21,6 +21,8 @@ type Repository interface {
 	// Enrollment
 	SetEnrollment(ctx context.Context, enrollment *models.Enrollment) error
 	GetStudentsPerExam(ctx context.Context, examId string) ([]*models.Student, error)
+	// Questions per Exam
+	GetQuestionPerExam(ctx context.Context, examId string) ([]*models.Question, error)
 }
 
 // Assign Repository
@@ -67,4 +69,9 @@ func SetEnrollment(ctx context.Context, enrollment *models.Enrollment) error {
 // Get students by exam id
 func GetStudentsPerExam(ctx context.Context, examId string) ([]*models.Student, error) {
 	return implementation.GetStudentsPerExam(ctx, examId)
+}
+
+// Get Questions per Exam
+func GetQuestionPerExam(ctx context.Context, examId string) ([]*models.Question, error) {
+	return implementation.GetQuestionPerExam(ctx, examId)
 }
