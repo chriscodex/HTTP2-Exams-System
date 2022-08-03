@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"io"
+	"log"
 	"time"
 
 	"github.com/ChrisCodeX/gRPC/exampb"
@@ -157,4 +158,41 @@ func (s *ExamServer) GetStudentsPerExam(req *exampb.GetStudentsPerExamRequest, s
 		}
 	}
 	return nil
+}
+
+//
+func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
+	questions, err := s.repo.GetQuestionPerExam(context.Background(), "t1")
+	if err != nil {
+		return err
+	}
+
+	i := 0
+	var currentQuestion = &models.Question{}
+	for {
+		if i < len(questions) {
+			currentQuestion = questions[i]
+		}
+
+		if i <= len(questions) {
+			questionToSend := &exampb.Question{
+				Id:       currentQuestion.Id,
+				Question: currentQuestion.Question,
+			}
+			err := stream.Send(questionToSend)
+
+			if err != nil {
+				return err
+			}
+			i++
+		}
+		answer, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		log.Println("Answer: ", answer.GetAnswer())
+	}
 }
