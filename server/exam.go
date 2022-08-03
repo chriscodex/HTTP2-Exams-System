@@ -3,10 +3,12 @@ package server
 import (
 	"context"
 	"io"
+	"time"
 
 	"github.com/ChrisCodeX/gRPC/exampb"
 	"github.com/ChrisCodeX/gRPC/models"
 	"github.com/ChrisCodeX/gRPC/repository"
+	"github.com/ChrisCodeX/gRPC/studentpb"
 )
 
 type ExamServer struct {
@@ -93,4 +95,66 @@ func (s *ExamServer) SetQuestions(stream exampb.ExamService_SetQuestionsServer) 
 			})
 		}
 	}
+}
+
+// Enroll a student to the exam
+func (s *ExamServer) EnrollStudents(stream exampb.ExamService_EnrollStudentsServer) error {
+	for {
+		// Recieve a message from the client
+		msg, err := stream.Recv()
+
+		// Response from server when client stop sending messages
+		if err == io.EOF {
+			// Response from server and close the stream
+			return stream.SendAndClose(&exampb.EnrollmentResponse{
+				Ok: true,
+			})
+		}
+		if err != nil {
+			return err
+		}
+
+		// Map the message into enrollment struct
+		enrollment := &models.Enrollment{
+			StudentId: msg.GetStudentId(),
+			ExamId:    msg.GetExamId(),
+		}
+
+		// Insert question in database
+		err = s.repo.SetEnrollment(context.Background(), enrollment)
+		if err != nil {
+			return stream.SendAndClose(&exampb.EnrollmentResponse{
+				Ok: false,
+			})
+		}
+	}
+}
+
+// Get student by exam id
+func (s *ExamServer) GetStudentsPerExam(req *exampb.GetStudentsPerExamRequest, stream exampb.ExamService_GetStudentsPerExamServer) error {
+	// Get array of students
+	students, err := s.repo.GetStudentsPerExam(context.Background(), req.GetExamId())
+	if err != nil {
+		return err
+	}
+
+	// Map student struct into student protobuf to be sended by the stream
+	for _, student := range students {
+		student := &studentpb.Student{
+			Id:   student.Id,
+			Name: student.Name,
+			Age:  student.Age,
+		}
+
+		// Send the student to the client
+		err := stream.Send(student)
+
+		// Unnecessary code(Stream delay, Only to see the stream)
+		time.Sleep(2 * time.Second)
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
