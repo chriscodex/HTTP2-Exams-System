@@ -59,6 +59,10 @@ message EnrollmentResponse {
     bool ok = 1;
 }
 
+message TakeExamRequest {
+    string answer = 1;
+}
+
 // Exam service
 service ExamService {
     /* Methods Unary */
@@ -76,6 +80,9 @@ service ExamService {
 
     // Stream for server - 1 response from client
     rpc GetStudentsPerExam(GetStudentsPerExamRequest) returns (stream student.Student);
+
+    // Stream Bidirectional
+    rpc TakeExam(stream TakeExamRequest) returns (stream Question);
 }
 
 
