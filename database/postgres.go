@@ -98,3 +98,37 @@ func (repo *PostgresRepository) SetQuestion(ctx context.Context, question *model
 		question.Id, question.Question, question.Answer, question.ExamId)
 	return err
 }
+
+// Get students by exam id
+func (repo *PostgresRepository) GetStudentsPerExam(ctx context.Context, examId string) ([]*models.Student, error) {
+	// Query
+	rows, err := repo.db.QueryContext(ctx, "SELECT id, name, age FROM students 	WHERE id IN (SELECT student_id FROM enrollments WHERE exam_id = $1)", examId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Stop reading rows
+	defer CloseReadingRows(rows)
+
+	// Map query results into student struct and add into students struct
+	var students []*models.Student
+
+	for rows.Next() {
+		var student = models.Student{}
+		if err = rows.Scan(&student.Id, &student.Name, &student.Age); err == nil {
+			students = append(students, &student)
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return students, nil
+}
+
+// Enroll a student
+func (repo *PostgresRepository) SetEnrollment(ctx context.Context, enrollment *models.Enrollment) error {
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO enrollments (exam_id, student_id) VALUES ($1, $2)", enrollment.ExamId, enrollment.StudentId)
+	return err
+}

@@ -16,7 +16,11 @@ type Repository interface {
 	GetExam(ctx context.Context, id string) (*models.Exam, error)
 	SetExam(ctx context.Context, exam *models.Exam) error
 	// Stream from client
+	// Questions
 	SetQuestion(ctx context.Context, question *models.Question) error
+	// Enrollment
+	SetEnrollment(ctx context.Context, enrollment *models.Enrollment) error
+	GetStudentsPerExam(ctx context.Context, examId string) ([]*models.Student, error)
 }
 
 // Assign Repository
@@ -53,4 +57,14 @@ func SetExam(ctx context.Context, exam *models.Exam) error {
 // Insert Questions
 func SetQuestion(ctx context.Context, question *models.Question) error {
 	return implementation.SetQuestion(ctx, question)
+}
+
+// Enroll a student to a exam
+func SetEnrollment(ctx context.Context, enrollment *models.Enrollment) error {
+	return implementation.SetEnrollment(ctx, enrollment)
+}
+
+// Get students by exam id
+func GetStudentsPerExam(ctx context.Context, examId string) ([]*models.Student, error) {
+	return implementation.GetStudentsPerExam(ctx, examId)
 }
