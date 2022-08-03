@@ -19,7 +19,7 @@ func main() {
 
 	var postgresURL string = "postgres://postgres:postgres@localhost:54321/postgres?sslmode=disable"
 	// Instance of Postgres Repository
-	repo, err := database.NewPostgreRepository(postgresURL)
+	repo, err := database.NewPostgresRepository(postgresURL)
 	if err != nil {
 		log.Fatal(err)
 	}

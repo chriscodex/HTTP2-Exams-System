@@ -1,10 +1,13 @@
 syntax = "proto3";
 
+// Import student.proto
+import "studentpb/student.proto";
+
 // Proto Package
 package exam;
 
 // Go package
-option go_package = "github.com/ChrisCodeX/gRPC;exampb";
+option go_package = "github.com/ChrisCodeX/gRPC/exampb";
 
 // Exam model
 message Exam {
@@ -20,17 +23,39 @@ message Question {
     string exam_id = 4;
 }
 
-// Clients request messages
+// Unary
+/* Clients request messages */
+// Get a exam
 message GetExamRequest {
     string id = 1;
 }
 
-// Server response messages
+/* Server response message */
 message SetExamResponse {
     string id = 1;
 }
 
+// Stream
+/* Questions */
+// End stream response for question
 message SetQuestionResponse {
+    bool ok = 1;
+}
+
+/* Enroll student to exam */
+// Enroll request from client
+message EnrollmentRequest {
+    string student_id = 1;
+    string exam_id = 2;
+}
+
+// Every request response
+message GetStudentsPerExamRequest {
+    string exam_id = 1;
+}
+
+// End stream response for enrollment from server
+message EnrollmentResponse {
     bool ok = 1;
 }
 
@@ -43,6 +68,14 @@ service ExamService {
     rpc SetExam(Exam) returns (SetExamResponse);
 
     /* Stream */
-    // Stream from client - 1 responde from server
+    // Stream from client - 1 response from server
     rpc SetQuestions(stream Question) returns (SetQuestionResponse);
+
+    // Stream from client - 1 response from server
+    rpc EnrollStudents(stream EnrollmentRequest) returns (EnrollmentResponse);
+
+    // Stream for server - 1 response from client
+    rpc GetStudentsPerExam(GetStudentsPerExamRequest) returns (stream student.Student);
 }
+
+

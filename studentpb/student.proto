@@ -4,7 +4,7 @@ syntax = "proto3";
 package student;
 
 // Go package
-option go_package = "github.com/ChrisCodeX/gRPC;studentpb";
+option go_package = "github.com/ChrisCodeX/gRPC/studentpb";
 
 message Student {
   string id = 1;
