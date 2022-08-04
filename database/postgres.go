@@ -128,22 +128,26 @@ func (repo *PostgresRepository) GetStudentsPerExam(ctx context.Context, examId s
 
 // Insert a question into the database
 func (repo *PostgresRepository) SetQuestion(ctx context.Context, question *models.Question) error {
-	_, err := repo.db.ExecContext(ctx, "INSERT INTO questions (id, question, fk_exam_id) VALUES ($1, $2, $3)",
-		question.Id, question.Question, question.ExamId)
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO questions (id, question, answer, fk_exam_id) VALUES ($1, $2, $3, $4)",
+		question.Id, question.Question, question.Answer, question.ExamId)
 	return err
 }
 
 // Get Question Per Exam
 func (repo *PostgresRepository) GetQuestionPerExam(ctx context.Context, examId string) ([]*models.Question, error) {
-	rows, err := repo.db.QueryContext(ctx, "SELECT id, question FROM questions WHERE fk_exam_id = $1", examId)
+	rows, err := repo.db.QueryContext(ctx, "SELECT id, question, answer FROM questions WHERE fk_exam_id = $1", examId)
 	if err != nil {
 		return nil, err
 	}
+
+	// Stop reading rows
 	defer CloseReadingRows(rows)
+
+	// Map rows of query into question struct
 	var questions []*models.Question
 	for rows.Next() {
 		var question = models.Question{}
-		if err = rows.Scan(&question.Id, &question.Question); err == nil {
+		if err = rows.Scan(&question.Id, &question.Question, &question.Answer); err == nil {
 			questions = append(questions, &question)
 		}
 	}
@@ -152,3 +156,5 @@ func (repo *PostgresRepository) GetQuestionPerExam(ctx context.Context, examId s
 	}
 	return questions, nil
 }
+
+// Insert Answer into database
