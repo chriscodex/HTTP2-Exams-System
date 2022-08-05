@@ -81,6 +81,7 @@ func (s *ExamServer) EnrollStudents(stream exampb.ExamService_EnrollStudentsServ
 
 		// Map the message into enrollment struct
 		enrollment := &models.Enrollment{
+			Id:        msg.GetId(),
 			StudentId: msg.GetFkStudentId(),
 			ExamId:    msg.GetFkExamId(),
 		}
@@ -146,6 +147,7 @@ func (s *ExamServer) SetQuestions(stream exampb.ExamService_SetQuestionsServer) 
 		question := &models.Question{
 			Id:       msg.Id,
 			Question: msg.Question,
+			Answer:   msg.Answer,
 			ExamId:   msg.FkExamId,
 		}
 
@@ -159,21 +161,72 @@ func (s *ExamServer) SetQuestions(stream exampb.ExamService_SetQuestionsServer) 
 	}
 }
 
-//
-func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
-	questions, err := s.repo.GetQuestionPerExam(context.Background(), "e1")
+// Get student by exam id
+func (s *ExamServer) GetQuestionsPerExam(req *exampb.GetQuestionsPerExamRequest, stream exampb.ExamService_GetQuestionsPerExamServer) error {
+	// Get array of students
+	questions, err := s.repo.GetQuestionPerExam(context.Background(), req.GetFkExamId())
 	if err != nil {
 		return err
 	}
 
+	// Map student struct into student protobuf to be sended by the stream
+	for _, question := range questions {
+		question := &exampb.Question{
+			Id:       question.Id,
+			Question: question.Question,
+			Answer:   question.Answer,
+		}
+
+		// Send the student to the client
+		err := stream.Send(question)
+
+		// Unnecessary code(Stream delay, Only to see the stream)
+		time.Sleep(2 * time.Second)
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Take exam
+func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
+	// Recieve a message from the client
+	msg, err := stream.Recv()
+	if err != nil {
+		return err
+	}
+
+	enrollment, err := s.repo.GetEnrollmentById(context.Background(), msg.GetEnrollmentId())
+	if err != nil {
+		return err
+	}
+
+	// Get array of questions from database by exam id
+	questions, err := s.repo.GetQuestionPerExam(context.Background(), enrollment.ExamId)
+	if err != nil {
+		return err
+	}
+	qts := &exampb.Question{
+		Id: enrollment.ExamId,
+	}
+	err = stream.Send(qts)
+	if err != nil {
+		return err
+	}
+
+	//
 	i := 0
+	var count uint16
 	var currentQuestion = &models.Question{}
-	for {
+	for i < len(questions) {
 		if i < len(questions) {
 			currentQuestion = questions[i]
 		}
 
 		if i <= len(questions) {
+			// Send Question from protobuf file
 			questionToSend := &exampb.Question{
 				Id:       currentQuestion.Id,
 				Question: currentQuestion.Question,
@@ -185,6 +238,7 @@ func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
 			}
 			i++
 		}
+
 		answer, err := stream.Recv()
 		if err == io.EOF {
 			return nil
@@ -192,6 +246,40 @@ func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
 		if err != nil {
 			return err
 		}
+		if answer.GetAnswer() == currentQuestion.Answer {
+			count++
+		}
 		log.Println("Answer: ", answer.GetAnswer())
 	}
+	countQuestions, err := s.repo.GetCountQuestionsByExamId(context.Background(), enrollment.ExamId)
+	if err != nil {
+		return err
+	}
+	countQuest := float32(*countQuestions)
+	score := float32(float32(count) * 10 / countQuest)
+	log.Printf("Score: %.2f", score)
+
+	// scoreString := fmt.Sprintf("%f", score)
+	// err = s.repo.SetScore(context.Background(), enrollment.ExamId, scoreString)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return err
+	// }
+	return nil
 }
+
+// func (s *ExamServer) GetScore(ctx context.Context, req *exampb.GetScoreRequest) (*exampb.GetScoreResponse, error) {
+// 	// Get exam from database
+// 	enrollment, err := s.repo.GetEnrollmentById(ctx, "m1")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// Map enrollment struct into GetScoreResponse message protobuf
+// 	return &exampb.GetScoreResponse{
+// 		EnrollmentId: enrollment.Id,
+// 		FkStudentId:  enrollment.StudentId,
+// 		FkExamId:     enrollment.ExamId,
+// 		Score:        enrollment.Score,
+// 	}, nil
+// }
