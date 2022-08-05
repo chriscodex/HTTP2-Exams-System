@@ -37,6 +37,8 @@ type ExamServiceClient interface {
 	GetQuestionsPerExam(ctx context.Context, in *GetQuestionsPerExamRequest, opts ...grpc.CallOption) (ExamService_GetQuestionsPerExamClient, error)
 	// Stream Bidirectional
 	TakeExam(ctx context.Context, opts ...grpc.CallOption) (ExamService_TakeExamClient, error)
+	// Unary
+	GetScore(ctx context.Context, in *GetScoreRequest, opts ...grpc.CallOption) (*GetScoreResponse, error)
 }
 
 type examServiceClient struct {
@@ -228,6 +230,15 @@ func (x *examServiceTakeExamClient) Recv() (*Question, error) {
 	return m, nil
 }
 
+func (c *examServiceClient) GetScore(ctx context.Context, in *GetScoreRequest, opts ...grpc.CallOption) (*GetScoreResponse, error) {
+	out := new(GetScoreResponse)
+	err := c.cc.Invoke(ctx, "/exam.ExamService/GetScore", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ExamServiceServer is the server API for ExamService service.
 // All implementations must embed UnimplementedExamServiceServer
 // for forward compatibility
@@ -246,6 +257,8 @@ type ExamServiceServer interface {
 	GetQuestionsPerExam(*GetQuestionsPerExamRequest, ExamService_GetQuestionsPerExamServer) error
 	// Stream Bidirectional
 	TakeExam(ExamService_TakeExamServer) error
+	// Unary
+	GetScore(context.Context, *GetScoreRequest) (*GetScoreResponse, error)
 	mustEmbedUnimplementedExamServiceServer()
 }
 
@@ -273,6 +286,9 @@ func (UnimplementedExamServiceServer) GetQuestionsPerExam(*GetQuestionsPerExamRe
 }
 func (UnimplementedExamServiceServer) TakeExam(ExamService_TakeExamServer) error {
 	return status.Errorf(codes.Unimplemented, "method TakeExam not implemented")
+}
+func (UnimplementedExamServiceServer) GetScore(context.Context, *GetScoreRequest) (*GetScoreResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetScore not implemented")
 }
 func (UnimplementedExamServiceServer) mustEmbedUnimplementedExamServiceServer() {}
 
@@ -443,6 +459,24 @@ func (x *examServiceTakeExamServer) Recv() (*TakeExamRequest, error) {
 	return m, nil
 }
 
+func _ExamService_GetScore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetScoreRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExamServiceServer).GetScore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/exam.ExamService/GetScore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExamServiceServer).GetScore(ctx, req.(*GetScoreRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ExamService_ServiceDesc is the grpc.ServiceDesc for ExamService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -457,6 +491,10 @@ var ExamService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetExam",
 			Handler:    _ExamService_SetExam_Handler,
+		},
+		{
+			MethodName: "GetScore",
+			Handler:    _ExamService_GetScore_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
