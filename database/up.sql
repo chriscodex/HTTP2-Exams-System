@@ -13,21 +13,30 @@ CREATE TABLE exams (
     name VARCHAR(255) NOT NULL
 );
 
+DROP TABLE IF EXISTS enrollments;
+
+CREATE TABLE enrollments (
+    fk_student_id VARCHAR(32) NOT NULL,
+    fk_exam_id VARCHAR(32) NOT NULL,
+    FOREIGN KEY (fk_student_id) REFERENCES students(id),
+    FOREIGN KEY (fk_exam_id) REFERENCES exams(id)
+);
+
 DROP TABLE IF EXISTS questions;
 
 CREATE TABLE questions (
     id VARCHAR(32) PRIMARY KEY,
-    exam_id VARCHAR(32) NOT NULL,
+    fk_exam_id VARCHAR(32) NOT NULL,
     question VARCHAR(255) NOT NULL,
+    FOREIGN KEY (fk_exam_id) REFERENCES exams(id)
+);
+
+DROP TABLE IF EXISTS answers;
+
+CREATE TABLE answers (
+    id VARCHAR(32) PRIMARY KEY,
+    fk_question_id VARCHAR(32) NOT NULL,
     answer VARCHAR(255) NOT NULL,
-    FOREIGN KEY (exam_id) REFERENCES exams(id)
+    FOREIGN KEY (fk_question_id) REFERENCES questions(id)
 );
 
-DROP TABLE IF EXISTS enrollments;
-
-CREATE TABLE enrollments (
-    student_id VARCHAR(32) NOT NULL,
-    exam_id VARCHAR(32) NOT NULL,
-    FOREIGN KEY (student_id) REFERENCES students(id),
-    FOREIGN KEY (exam_id) REFERENCES exams(id)
-);
