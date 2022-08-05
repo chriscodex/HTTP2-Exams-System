@@ -11,16 +11,21 @@ type Repository interface {
 	/* Student Service */
 	GetStudent(ctx context.Context, id string) (*models.Student, error)
 	SetStudent(ctx context.Context, student *models.Student) error
+
 	/* Exam Service */
 	//Unary Methods
 	GetExam(ctx context.Context, id string) (*models.Exam, error)
 	SetExam(ctx context.Context, exam *models.Exam) error
+
 	// Stream from client
-	// Questions
-	SetQuestion(ctx context.Context, question *models.Question) error
 	// Enrollment
 	SetEnrollment(ctx context.Context, enrollment *models.Enrollment) error
+
 	GetStudentsPerExam(ctx context.Context, examId string) ([]*models.Student, error)
+
+	// Questions
+	SetQuestion(ctx context.Context, question *models.Question) error
+
 	// Questions per Exam
 	GetQuestionPerExam(ctx context.Context, examId string) ([]*models.Question, error)
 }

@@ -62,42 +62,6 @@ func (s *ExamServer) SetExam(ctx context.Context, req *exampb.Exam) (*exampb.Set
 }
 
 // Exam Service Stream Methods
-// Methods SetQuestions
-func (s *ExamServer) SetQuestions(stream exampb.ExamService_SetQuestionsServer) error {
-	for {
-		// Recieve a message from the client
-		msg, err := stream.Recv()
-
-		// Response from server when client stop sending messages
-		if err == io.EOF {
-			// Response from server and close the stream
-			return stream.SendAndClose(&exampb.SetQuestionResponse{
-				Ok: true,
-			})
-		}
-
-		if err != nil {
-			return err
-		}
-
-		// Map the message into question struct
-		question := &models.Question{
-			Id:       msg.Id,
-			Question: msg.Question,
-			Answer:   msg.Answer,
-			ExamId:   msg.ExamId,
-		}
-
-		// Insert question in database
-		err = s.repo.SetQuestion(context.Background(), question)
-		if err != nil {
-			return stream.SendAndClose(&exampb.SetQuestionResponse{
-				Ok: false,
-			})
-		}
-	}
-}
-
 // Enroll a student to the exam
 func (s *ExamServer) EnrollStudents(stream exampb.ExamService_EnrollStudentsServer) error {
 	for {
@@ -117,8 +81,8 @@ func (s *ExamServer) EnrollStudents(stream exampb.ExamService_EnrollStudentsServ
 
 		// Map the message into enrollment struct
 		enrollment := &models.Enrollment{
-			StudentId: msg.GetStudentId(),
-			ExamId:    msg.GetExamId(),
+			StudentId: msg.GetFkStudentId(),
+			ExamId:    msg.GetFkExamId(),
 		}
 
 		// Insert question in database
@@ -134,7 +98,7 @@ func (s *ExamServer) EnrollStudents(stream exampb.ExamService_EnrollStudentsServ
 // Get student by exam id
 func (s *ExamServer) GetStudentsPerExam(req *exampb.GetStudentsPerExamRequest, stream exampb.ExamService_GetStudentsPerExamServer) error {
 	// Get array of students
-	students, err := s.repo.GetStudentsPerExam(context.Background(), req.GetExamId())
+	students, err := s.repo.GetStudentsPerExam(context.Background(), req.GetFkExamId())
 	if err != nil {
 		return err
 	}
@@ -160,9 +124,44 @@ func (s *ExamServer) GetStudentsPerExam(req *exampb.GetStudentsPerExamRequest, s
 	return nil
 }
 
+// Methods SetQuestions
+func (s *ExamServer) SetQuestions(stream exampb.ExamService_SetQuestionsServer) error {
+	for {
+		// Recieve a message from the client
+		msg, err := stream.Recv()
+
+		// Response from server when client stop sending messages
+		if err == io.EOF {
+			// Response from server and close the stream
+			return stream.SendAndClose(&exampb.SetQuestionResponse{
+				Ok: true,
+			})
+		}
+
+		if err != nil {
+			return err
+		}
+
+		// Map the message into question struct
+		question := &models.Question{
+			Id:       msg.Id,
+			Question: msg.Question,
+			ExamId:   msg.FkExamId,
+		}
+
+		// Insert question in database
+		err = s.repo.SetQuestion(context.Background(), question)
+		if err != nil {
+			return stream.SendAndClose(&exampb.SetQuestionResponse{
+				Ok: false,
+			})
+		}
+	}
+}
+
 //
 func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
-	questions, err := s.repo.GetQuestionPerExam(context.Background(), "t1")
+	questions, err := s.repo.GetQuestionPerExam(context.Background(), "e1")
 	if err != nil {
 		return err
 	}
