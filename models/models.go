@@ -23,12 +23,6 @@ type Enrollment struct {
 type Question struct {
 	Id       string `json:"id"`
 	Question string `json:"question"`
+	Answer   string `json:"answer"`
 	ExamId   string `json:"fk_exam_id"`
-}
-
-// Model of answer
-type Answer struct {
-	Id         string `json:"id"`
-	Answer     string `json:"answer"`
-	QuestionId string `json:"fk_question_id"`
 }
