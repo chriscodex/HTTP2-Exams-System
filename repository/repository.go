@@ -28,6 +28,15 @@ type Repository interface {
 
 	// Questions per Exam
 	GetQuestionPerExam(ctx context.Context, examId string) ([]*models.Question, error)
+
+	// Questions Count per Exam
+	GetCountQuestionsByExamId(ctx context.Context, examId string) (*uint16, error)
+
+	// Get Enrollment by ID
+	GetEnrollmentById(ctx context.Context, enrollmentId string) (*models.Enrollment, error)
+
+	// Set Score
+	//SetScore(ctx context.Context, enrollmentId string, score string) error
 }
 
 // Assign Repository
@@ -80,3 +89,18 @@ func GetStudentsPerExam(ctx context.Context, examId string) ([]*models.Student, 
 func GetQuestionPerExam(ctx context.Context, examId string) ([]*models.Question, error) {
 	return implementation.GetQuestionPerExam(ctx, examId)
 }
+
+// Get Count of questions by exam id
+func GetCountQuestionsByExamId(ctx context.Context, examId string) (*uint16, error) {
+	return implementation.GetCountQuestionsByExamId(ctx, examId)
+}
+
+// Get Enrollment by id
+func GetEnrollmentById(ctx context.Context, enrollmentId string) (*models.Enrollment, error) {
+	return implementation.GetEnrollmentById(ctx, enrollmentId)
+}
+
+// Set Score
+// func SetScore(ctx context.Context, enrollmentId string, score string) error {
+// 	return implementation.SetScore(ctx, enrollmentId, score)
+// }
