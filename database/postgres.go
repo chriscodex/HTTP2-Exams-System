@@ -94,8 +94,8 @@ func (repo *PostgresRepository) SetExam(ctx context.Context, exam *models.Exam) 
 
 // Insert a question into the database
 func (repo *PostgresRepository) SetQuestion(ctx context.Context, question *models.Question) error {
-	_, err := repo.db.ExecContext(ctx, "INSERT INTO questions (id, question, answer, exam_id) VALUES ($1, $2, $3, $4)",
-		question.Id, question.Question, question.Answer, question.ExamId)
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO questions (id, question, exam_id) VALUES ($1, $2, $3)",
+		question.Id, question.Question, question.ExamId)
 	return err
 }
 
@@ -131,4 +131,24 @@ func (repo *PostgresRepository) GetStudentsPerExam(ctx context.Context, examId s
 func (repo *PostgresRepository) SetEnrollment(ctx context.Context, enrollment *models.Enrollment) error {
 	_, err := repo.db.ExecContext(ctx, "INSERT INTO enrollments (exam_id, student_id) VALUES ($1, $2)", enrollment.ExamId, enrollment.StudentId)
 	return err
+}
+
+// Get Question Per Exam
+func (repo *PostgresRepository) GetQuestionPerExam(ctx context.Context, examId string) ([]*models.Question, error) {
+	rows, err := repo.db.QueryContext(ctx, "SELECT id, question FROM questions WHERE exam_id = $1", examId)
+	if err != nil {
+		return nil, err
+	}
+	defer CloseReadingRows(rows)
+	var questions []*models.Question
+	for rows.Next() {
+		var question = models.Question{}
+		if err = rows.Scan(&question.Id, &question.Question); err == nil {
+			questions = append(questions, &question)
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return questions, nil
 }
