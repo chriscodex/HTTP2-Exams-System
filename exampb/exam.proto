@@ -33,6 +33,7 @@ message GetExamRequest {
 /* Server response message */
 message SetExamResponse {
     string id = 1;
+    bool ok = 2;
 }
 
 // Stream
@@ -48,6 +49,7 @@ message EnrollmentRequest {
 // End stream response for enrollment from server
 message EnrollmentResponse {
     bool ok = 1;
+    string id = 2;
 }
 
 // Request from client
@@ -68,9 +70,19 @@ message GetQuestionsPerExamRequest {
 
 // Take exam request
 message TakeExamRequest {
-    string fk_exam_id = 1;
+    string enrollment_id = 1;
+    string answer = 2;
+}
+
+message GetScoreRequest {
+    string enrollment_id = 1;
+}
+
+message GetScoreResponse {
+    string enrollment_id = 1;
     string fk_student_id = 2;
-    string answer = 3;
+    string fk_exam_id = 3;
+    string score = 4;
 }
 
 
@@ -98,6 +110,9 @@ service ExamService {
 
     // Stream Bidirectional
     rpc TakeExam(stream TakeExamRequest) returns (stream Question);
+
+    // Unary
+    // rpc GetScore(GetScoreRequest) returns (GetScoreResponse);
 }
 
 
