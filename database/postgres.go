@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"strconv"
 
 	"github.com/ChrisCodeX/gRPC/models"
 	_ "github.com/lib/pq"
@@ -94,7 +95,7 @@ func (repo *PostgresRepository) SetExam(ctx context.Context, exam *models.Exam) 
 
 // Enroll a student
 func (repo *PostgresRepository) SetEnrollment(ctx context.Context, enrollment *models.Enrollment) error {
-	_, err := repo.db.ExecContext(ctx, "INSERT INTO enrollments (fk_exam_id, fk_student_id) VALUES ($1, $2)", enrollment.ExamId, enrollment.StudentId)
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO enrollments (id, fk_exam_id, fk_student_id) VALUES ($1, $2, $3)", enrollment.Id, enrollment.ExamId, enrollment.StudentId)
 	return err
 }
 
@@ -158,3 +159,84 @@ func (repo *PostgresRepository) GetQuestionPerExam(ctx context.Context, examId s
 }
 
 // Insert Answer into database
+func (repo *PostgresRepository) GetCountQuestionsByExamId(ctx context.Context, examId string) (*uint16, error) {
+	// Query
+	row, err := repo.db.QueryContext(ctx, "SELECT COUNT(*) FROM questions")
+	if err != nil {
+		return nil, err
+	}
+	defer CloseReadingRows(row)
+	var countString string
+	for row.Next() {
+		if err = row.Scan(&countString); err != nil {
+			return nil, err
+		}
+	}
+	if err = row.Err(); err != nil {
+		return nil, err
+	}
+	countInt, err := strconv.Atoi(countString)
+	if err != nil {
+		return nil, err
+	}
+	count := uint16(countInt)
+	return &count, nil
+}
+
+// Get enrollment by id
+func (repo *PostgresRepository) GetEnrollmentById(ctx context.Context, id string) (*models.Enrollment, error) {
+	// Query
+	rows, err := repo.db.QueryContext(ctx, "SELECT id, fk_exam_id, fk_student_id FROM enrollments WHERE id = $1", id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Stop reading rows
+	defer CloseReadingRows(rows)
+
+	// Map rows values of the query into the students struct
+	var enrollment = models.Enrollment{}
+
+	for rows.Next() {
+		if err = rows.Scan(&enrollment.Id, &enrollment.ExamId, &enrollment.StudentId); err != nil {
+			return &enrollment, nil
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return &enrollment, err
+	}
+
+	return &enrollment, nil
+}
+
+// Set Score
+// func (repo *PostgresRepository) SetScore(ctx context.Context, enrollmentId string, score string) error {
+// 	_, err := repo.db.ExecContext(ctx, "UPDATE enrollments SET score = $1 WHERE id = $2",
+// 		score, enrollmentId)
+// 	return err
+// }
+
+// // Get Score
+// func (repo *PostgresRepository) GetScore(ctx context.Context, enrollmentId string) (*models.Enrollment, error) {
+// 	// Query
+// 	rows, err := repo.db.QueryContext(ctx, "SELECT id, score, fk_exam_id, fk_student_id FROM enrollments WHERE id = $1", enrollmentId)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// Stop reading rows
+// 	defer CloseReadingRows(rows)
+
+// 	// Map rows values of the query into the students struct
+// 	var enrollment = models.Enrollment{}
+
+// 	for rows.Next() {
+// 		if err = rows.Scan(&enrollment.Id, &enrollment.Score,&enrollment.ExamId, &enrollment.StudentId); err != nil {
+// 			return &enrollment, nil
+// 		}
+// 	}
+// 	if err = rows.Err(); err != nil {
+// 		return &enrollment, err
+// 	}
+// 	return &enrollment, nil
+// }
