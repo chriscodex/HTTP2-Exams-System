@@ -94,15 +94,21 @@ func (repo *PostgresRepository) SetExam(ctx context.Context, exam *models.Exam) 
 
 // Insert a question into the database
 func (repo *PostgresRepository) SetQuestion(ctx context.Context, question *models.Question) error {
-	_, err := repo.db.ExecContext(ctx, "INSERT INTO questions (id, question, exam_id) VALUES ($1, $2, $3)",
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO questions (id, question, fk_exam_id) VALUES ($1, $2, $3)",
 		question.Id, question.Question, question.ExamId)
+	return err
+}
+
+// Enroll a student
+func (repo *PostgresRepository) SetEnrollment(ctx context.Context, enrollment *models.Enrollment) error {
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO enrollments (fk_exam_id, fk_student_id) VALUES ($1, $2)", enrollment.ExamId, enrollment.StudentId)
 	return err
 }
 
 // Get students by exam id
 func (repo *PostgresRepository) GetStudentsPerExam(ctx context.Context, examId string) ([]*models.Student, error) {
 	// Query
-	rows, err := repo.db.QueryContext(ctx, "SELECT id, name, age FROM students 	WHERE id IN (SELECT student_id FROM enrollments WHERE exam_id = $1)", examId)
+	rows, err := repo.db.QueryContext(ctx, "SELECT id, name, age FROM students 	WHERE id IN (SELECT fk_student_id FROM enrollments WHERE fk_exam_id = $1)", examId)
 	if err != nil {
 		return nil, err
 	}
@@ -127,15 +133,9 @@ func (repo *PostgresRepository) GetStudentsPerExam(ctx context.Context, examId s
 	return students, nil
 }
 
-// Enroll a student
-func (repo *PostgresRepository) SetEnrollment(ctx context.Context, enrollment *models.Enrollment) error {
-	_, err := repo.db.ExecContext(ctx, "INSERT INTO enrollments (exam_id, student_id) VALUES ($1, $2)", enrollment.ExamId, enrollment.StudentId)
-	return err
-}
-
 // Get Question Per Exam
 func (repo *PostgresRepository) GetQuestionPerExam(ctx context.Context, examId string) ([]*models.Question, error) {
-	rows, err := repo.db.QueryContext(ctx, "SELECT id, question FROM questions WHERE exam_id = $1", examId)
+	rows, err := repo.db.QueryContext(ctx, "SELECT id, question FROM questions WHERE fk_exam_id = $1", examId)
 	if err != nil {
 		return nil, err
 	}
