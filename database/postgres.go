@@ -92,13 +92,6 @@ func (repo *PostgresRepository) SetExam(ctx context.Context, exam *models.Exam) 
 	return err
 }
 
-// Insert a question into the database
-func (repo *PostgresRepository) SetQuestion(ctx context.Context, question *models.Question) error {
-	_, err := repo.db.ExecContext(ctx, "INSERT INTO questions (id, question, fk_exam_id) VALUES ($1, $2, $3)",
-		question.Id, question.Question, question.ExamId)
-	return err
-}
-
 // Enroll a student
 func (repo *PostgresRepository) SetEnrollment(ctx context.Context, enrollment *models.Enrollment) error {
 	_, err := repo.db.ExecContext(ctx, "INSERT INTO enrollments (fk_exam_id, fk_student_id) VALUES ($1, $2)", enrollment.ExamId, enrollment.StudentId)
@@ -131,6 +124,13 @@ func (repo *PostgresRepository) GetStudentsPerExam(ctx context.Context, examId s
 	}
 
 	return students, nil
+}
+
+// Insert a question into the database
+func (repo *PostgresRepository) SetQuestion(ctx context.Context, question *models.Question) error {
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO questions (id, question, fk_exam_id) VALUES ($1, $2, $3)",
+		question.Id, question.Question, question.ExamId)
+	return err
 }
 
 // Get Question Per Exam
