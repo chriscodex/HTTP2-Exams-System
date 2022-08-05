@@ -19,8 +19,7 @@ message Exam {
 message Question {
     string id = 1;
     string question = 2;
-    string answer = 3;
-    string exam_id = 4;
+    string exam_id = 3;
 }
 
 // Unary
@@ -36,22 +35,12 @@ message SetExamResponse {
 }
 
 // Stream
-/* Questions */
-// End stream response for question
-message SetQuestionResponse {
-    bool ok = 1;
-}
 
 /* Enroll student to exam */
 // Enroll request from client
 message EnrollmentRequest {
-    string student_id = 1;
-    string exam_id = 2;
-}
-
-// Every request response
-message GetStudentsPerExamRequest {
-    string exam_id = 1;
+    string fk_student_id = 1;
+    string fk_exam_id = 2;
 }
 
 // End stream response for enrollment from server
@@ -59,6 +48,18 @@ message EnrollmentResponse {
     bool ok = 1;
 }
 
+// Every request response
+message GetStudentsPerExamRequest {
+    string fk_exam_id = 1;
+}
+
+/* Questions */
+// End stream response for question
+message SetQuestionResponse {
+    bool ok = 1;
+}
+
+// 
 message TakeExamRequest {
     string answer = 1;
 }
@@ -72,14 +73,16 @@ service ExamService {
     rpc SetExam(Exam) returns (SetExamResponse);
 
     /* Stream */
-    // Stream from client - 1 response from server
-    rpc SetQuestions(stream Question) returns (SetQuestionResponse);
-
+    
     // Stream from client - 1 response from server
     rpc EnrollStudents(stream EnrollmentRequest) returns (EnrollmentResponse);
 
     // Stream for server - 1 response from client
     rpc GetStudentsPerExam(GetStudentsPerExamRequest) returns (stream student.Student);
+
+    // Stream from client - 1 response from server
+    rpc SetQuestions(stream Question) returns (SetQuestionResponse);
+
 
     // Stream Bidirectional
     rpc TakeExam(stream TakeExamRequest) returns (stream Question);
