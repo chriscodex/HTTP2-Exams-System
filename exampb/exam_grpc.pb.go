@@ -28,11 +28,11 @@ type ExamServiceClient interface {
 	// Server response
 	SetExam(ctx context.Context, in *Exam, opts ...grpc.CallOption) (*SetExamResponse, error)
 	// Stream from client - 1 response from server
-	SetQuestions(ctx context.Context, opts ...grpc.CallOption) (ExamService_SetQuestionsClient, error)
-	// Stream from client - 1 response from server
 	EnrollStudents(ctx context.Context, opts ...grpc.CallOption) (ExamService_EnrollStudentsClient, error)
 	// Stream for server - 1 response from client
 	GetStudentsPerExam(ctx context.Context, in *GetStudentsPerExamRequest, opts ...grpc.CallOption) (ExamService_GetStudentsPerExamClient, error)
+	// Stream from client - 1 response from server
+	SetQuestions(ctx context.Context, opts ...grpc.CallOption) (ExamService_SetQuestionsClient, error)
 	// Stream Bidirectional
 	TakeExam(ctx context.Context, opts ...grpc.CallOption) (ExamService_TakeExamClient, error)
 }
@@ -63,42 +63,8 @@ func (c *examServiceClient) SetExam(ctx context.Context, in *Exam, opts ...grpc.
 	return out, nil
 }
 
-func (c *examServiceClient) SetQuestions(ctx context.Context, opts ...grpc.CallOption) (ExamService_SetQuestionsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ExamService_ServiceDesc.Streams[0], "/exam.ExamService/SetQuestions", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &examServiceSetQuestionsClient{stream}
-	return x, nil
-}
-
-type ExamService_SetQuestionsClient interface {
-	Send(*Question) error
-	CloseAndRecv() (*SetQuestionResponse, error)
-	grpc.ClientStream
-}
-
-type examServiceSetQuestionsClient struct {
-	grpc.ClientStream
-}
-
-func (x *examServiceSetQuestionsClient) Send(m *Question) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *examServiceSetQuestionsClient) CloseAndRecv() (*SetQuestionResponse, error) {
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	m := new(SetQuestionResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 func (c *examServiceClient) EnrollStudents(ctx context.Context, opts ...grpc.CallOption) (ExamService_EnrollStudentsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ExamService_ServiceDesc.Streams[1], "/exam.ExamService/EnrollStudents", opts...)
+	stream, err := c.cc.NewStream(ctx, &ExamService_ServiceDesc.Streams[0], "/exam.ExamService/EnrollStudents", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +98,7 @@ func (x *examServiceEnrollStudentsClient) CloseAndRecv() (*EnrollmentResponse, e
 }
 
 func (c *examServiceClient) GetStudentsPerExam(ctx context.Context, in *GetStudentsPerExamRequest, opts ...grpc.CallOption) (ExamService_GetStudentsPerExamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ExamService_ServiceDesc.Streams[2], "/exam.ExamService/GetStudentsPerExam", opts...)
+	stream, err := c.cc.NewStream(ctx, &ExamService_ServiceDesc.Streams[1], "/exam.ExamService/GetStudentsPerExam", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +123,40 @@ type examServiceGetStudentsPerExamClient struct {
 
 func (x *examServiceGetStudentsPerExamClient) Recv() (*studentpb.Student, error) {
 	m := new(studentpb.Student)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *examServiceClient) SetQuestions(ctx context.Context, opts ...grpc.CallOption) (ExamService_SetQuestionsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ExamService_ServiceDesc.Streams[2], "/exam.ExamService/SetQuestions", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &examServiceSetQuestionsClient{stream}
+	return x, nil
+}
+
+type ExamService_SetQuestionsClient interface {
+	Send(*Question) error
+	CloseAndRecv() (*SetQuestionResponse, error)
+	grpc.ClientStream
+}
+
+type examServiceSetQuestionsClient struct {
+	grpc.ClientStream
+}
+
+func (x *examServiceSetQuestionsClient) Send(m *Question) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *examServiceSetQuestionsClient) CloseAndRecv() (*SetQuestionResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(SetQuestionResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -203,11 +203,11 @@ type ExamServiceServer interface {
 	// Server response
 	SetExam(context.Context, *Exam) (*SetExamResponse, error)
 	// Stream from client - 1 response from server
-	SetQuestions(ExamService_SetQuestionsServer) error
-	// Stream from client - 1 response from server
 	EnrollStudents(ExamService_EnrollStudentsServer) error
 	// Stream for server - 1 response from client
 	GetStudentsPerExam(*GetStudentsPerExamRequest, ExamService_GetStudentsPerExamServer) error
+	// Stream from client - 1 response from server
+	SetQuestions(ExamService_SetQuestionsServer) error
 	// Stream Bidirectional
 	TakeExam(ExamService_TakeExamServer) error
 	mustEmbedUnimplementedExamServiceServer()
@@ -223,14 +223,14 @@ func (UnimplementedExamServiceServer) GetExam(context.Context, *GetExamRequest) 
 func (UnimplementedExamServiceServer) SetExam(context.Context, *Exam) (*SetExamResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetExam not implemented")
 }
-func (UnimplementedExamServiceServer) SetQuestions(ExamService_SetQuestionsServer) error {
-	return status.Errorf(codes.Unimplemented, "method SetQuestions not implemented")
-}
 func (UnimplementedExamServiceServer) EnrollStudents(ExamService_EnrollStudentsServer) error {
 	return status.Errorf(codes.Unimplemented, "method EnrollStudents not implemented")
 }
 func (UnimplementedExamServiceServer) GetStudentsPerExam(*GetStudentsPerExamRequest, ExamService_GetStudentsPerExamServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetStudentsPerExam not implemented")
+}
+func (UnimplementedExamServiceServer) SetQuestions(ExamService_SetQuestionsServer) error {
+	return status.Errorf(codes.Unimplemented, "method SetQuestions not implemented")
 }
 func (UnimplementedExamServiceServer) TakeExam(ExamService_TakeExamServer) error {
 	return status.Errorf(codes.Unimplemented, "method TakeExam not implemented")
@@ -284,32 +284,6 @@ func _ExamService_SetExam_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ExamService_SetQuestions_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ExamServiceServer).SetQuestions(&examServiceSetQuestionsServer{stream})
-}
-
-type ExamService_SetQuestionsServer interface {
-	SendAndClose(*SetQuestionResponse) error
-	Recv() (*Question, error)
-	grpc.ServerStream
-}
-
-type examServiceSetQuestionsServer struct {
-	grpc.ServerStream
-}
-
-func (x *examServiceSetQuestionsServer) SendAndClose(m *SetQuestionResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *examServiceSetQuestionsServer) Recv() (*Question, error) {
-	m := new(Question)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 func _ExamService_EnrollStudents_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(ExamServiceServer).EnrollStudents(&examServiceEnrollStudentsServer{stream})
 }
@@ -357,6 +331,32 @@ func (x *examServiceGetStudentsPerExamServer) Send(m *studentpb.Student) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _ExamService_SetQuestions_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ExamServiceServer).SetQuestions(&examServiceSetQuestionsServer{stream})
+}
+
+type ExamService_SetQuestionsServer interface {
+	SendAndClose(*SetQuestionResponse) error
+	Recv() (*Question, error)
+	grpc.ServerStream
+}
+
+type examServiceSetQuestionsServer struct {
+	grpc.ServerStream
+}
+
+func (x *examServiceSetQuestionsServer) SendAndClose(m *SetQuestionResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *examServiceSetQuestionsServer) Recv() (*Question, error) {
+	m := new(Question)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func _ExamService_TakeExam_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(ExamServiceServer).TakeExam(&examServiceTakeExamServer{stream})
 }
@@ -401,11 +401,6 @@ var ExamService_ServiceDesc = grpc.ServiceDesc{
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "SetQuestions",
-			Handler:       _ExamService_SetQuestions_Handler,
-			ClientStreams: true,
-		},
-		{
 			StreamName:    "EnrollStudents",
 			Handler:       _ExamService_EnrollStudents_Handler,
 			ClientStreams: true,
@@ -414,6 +409,11 @@ var ExamService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "GetStudentsPerExam",
 			Handler:       _ExamService_GetStudentsPerExam_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "SetQuestions",
+			Handler:       _ExamService_SetQuestions_Handler,
+			ClientStreams: true,
 		},
 		{
 			StreamName:    "TakeExam",
