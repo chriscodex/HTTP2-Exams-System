@@ -84,6 +84,16 @@ message GetQualificationResponse {
     string score = 3;
 }
 
+message GetAnswerPerEnrollmentRequest {
+    string fk_enrollment_id = 1;
+}
+
+message StudentAnswers {
+    string question_id = 1;
+    string student_answer = 2;
+    string correct = 3;
+}
+
 
 // Exam service
 service ExamService {
@@ -112,7 +122,9 @@ service ExamService {
 
     // Unary
     rpc GetQualification(GetQualificationRequest) returns (GetQualificationResponse);
-    // rpc GetScore(GetScoreRequest) returns (GetScoreResponse);
+
+    // Stream server
+    rpc GetAnswerPerEnrollment(GetAnswerPerEnrollmentRequest) returns (stream StudentAnswers); 
 }
 
 

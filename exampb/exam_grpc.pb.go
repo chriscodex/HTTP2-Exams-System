@@ -39,6 +39,8 @@ type ExamServiceClient interface {
 	TakeExam(ctx context.Context, opts ...grpc.CallOption) (ExamService_TakeExamClient, error)
 	// Unary
 	GetQualification(ctx context.Context, in *GetQualificationRequest, opts ...grpc.CallOption) (*GetQualificationResponse, error)
+	// Stream server
+	GetAnswerPerEnrollment(ctx context.Context, in *GetAnswerPerEnrollmentRequest, opts ...grpc.CallOption) (ExamService_GetAnswerPerEnrollmentClient, error)
 }
 
 type examServiceClient struct {
@@ -239,6 +241,38 @@ func (c *examServiceClient) GetQualification(ctx context.Context, in *GetQualifi
 	return out, nil
 }
 
+func (c *examServiceClient) GetAnswerPerEnrollment(ctx context.Context, in *GetAnswerPerEnrollmentRequest, opts ...grpc.CallOption) (ExamService_GetAnswerPerEnrollmentClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ExamService_ServiceDesc.Streams[5], "/exam.ExamService/GetAnswerPerEnrollment", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &examServiceGetAnswerPerEnrollmentClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ExamService_GetAnswerPerEnrollmentClient interface {
+	Recv() (*StudentAnswers, error)
+	grpc.ClientStream
+}
+
+type examServiceGetAnswerPerEnrollmentClient struct {
+	grpc.ClientStream
+}
+
+func (x *examServiceGetAnswerPerEnrollmentClient) Recv() (*StudentAnswers, error) {
+	m := new(StudentAnswers)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ExamServiceServer is the server API for ExamService service.
 // All implementations must embed UnimplementedExamServiceServer
 // for forward compatibility
@@ -259,6 +293,8 @@ type ExamServiceServer interface {
 	TakeExam(ExamService_TakeExamServer) error
 	// Unary
 	GetQualification(context.Context, *GetQualificationRequest) (*GetQualificationResponse, error)
+	// Stream server
+	GetAnswerPerEnrollment(*GetAnswerPerEnrollmentRequest, ExamService_GetAnswerPerEnrollmentServer) error
 	mustEmbedUnimplementedExamServiceServer()
 }
 
@@ -289,6 +325,9 @@ func (UnimplementedExamServiceServer) TakeExam(ExamService_TakeExamServer) error
 }
 func (UnimplementedExamServiceServer) GetQualification(context.Context, *GetQualificationRequest) (*GetQualificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetQualification not implemented")
+}
+func (UnimplementedExamServiceServer) GetAnswerPerEnrollment(*GetAnswerPerEnrollmentRequest, ExamService_GetAnswerPerEnrollmentServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetAnswerPerEnrollment not implemented")
 }
 func (UnimplementedExamServiceServer) mustEmbedUnimplementedExamServiceServer() {}
 
@@ -477,6 +516,27 @@ func _ExamService_GetQualification_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ExamService_GetAnswerPerEnrollment_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetAnswerPerEnrollmentRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ExamServiceServer).GetAnswerPerEnrollment(m, &examServiceGetAnswerPerEnrollmentServer{stream})
+}
+
+type ExamService_GetAnswerPerEnrollmentServer interface {
+	Send(*StudentAnswers) error
+	grpc.ServerStream
+}
+
+type examServiceGetAnswerPerEnrollmentServer struct {
+	grpc.ServerStream
+}
+
+func (x *examServiceGetAnswerPerEnrollmentServer) Send(m *StudentAnswers) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // ExamService_ServiceDesc is the grpc.ServiceDesc for ExamService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -523,6 +583,11 @@ var ExamService_ServiceDesc = grpc.ServiceDesc{
 			Handler:       _ExamService_TakeExam_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
+		},
+		{
+			StreamName:    "GetAnswerPerEnrollment",
+			Handler:       _ExamService_GetAnswerPerEnrollment_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "exampb/exam.proto",
