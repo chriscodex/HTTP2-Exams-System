@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/ChrisCodeX/gRPC/exampb"
@@ -162,7 +163,7 @@ func (s *ExamServer) SetQuestions(stream exampb.ExamService_SetQuestionsServer) 
 	}
 }
 
-// Get student by exam id
+// Get questions by exam id
 func (s *ExamServer) GetQuestionsPerExam(req *exampb.GetQuestionsPerExamRequest, stream exampb.ExamService_GetQuestionsPerExamServer) error {
 	// Get array of students
 	questions, err := s.repo.GetQuestionPerExam(context.Background(), req.GetFkExamId())
@@ -233,6 +234,7 @@ func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
 				Id:       currentQuestion.Id,
 				Question: currentQuestion.Question,
 			}
+
 			err := stream.Send(questionToSend)
 
 			if err != nil {
@@ -249,8 +251,29 @@ func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
 		if err != nil {
 			return err
 		}
-		if answer.GetAnswer() == currentQuestion.Answer {
+		val := answer.GetAnswer() == currentQuestion.Answer
+		if val {
 			count++
+		}
+
+		//
+		// Generate random id
+		idRandomSa, err := ksuid.NewRandom()
+		if err != nil {
+			return err
+		}
+		studentAnswer := &models.StudentAnswers{
+			Id:            idRandomSa.String(),
+			EnrollmentId:  enrollment.Id,
+			QuestionId:    currentQuestion.Id,
+			StudentAnswer: answer.GetAnswer(),
+			Correct:       strconv.FormatBool(val),
+		}
+
+		// Insert student answer into database
+		err = s.repo.SetStudentAnswers(context.Background(), studentAnswer)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -266,14 +289,14 @@ func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
 	score := float32(float32(count) * 10 / countQuest)
 
 	// Generate random id
-	idRandom, err := ksuid.NewRandom()
+	idRandomQ, err := ksuid.NewRandom()
 	if err != nil {
 		return err
 	}
 
 	// Map the score into qualification struct
 	qualification := &models.Qualification{
-		Id:           idRandom.String(),
+		Id:           idRandomQ.String(),
 		Score:        fmt.Sprintf("%.2f", score),
 		EnrollmentId: enrollment.Id,
 	}
@@ -301,4 +324,33 @@ func (s *ExamServer) GetQualification(ctx context.Context, req *exampb.GetQualif
 		FkEnrollmentId: qualification.EnrollmentId,
 		Score:          qualification.Score,
 	}, nil
+}
+
+//
+func (s *ExamServer) GetAnswerPerEnrollment(req *exampb.GetAnswerPerEnrollmentRequest, stream exampb.ExamService_GetAnswerPerEnrollmentServer) error {
+	// Get array of students answers
+	studentAnswers, err := s.repo.GetAnswersPerEnrollment(context.Background(), req.GetFkEnrollmentId())
+	if err != nil {
+		return err
+	}
+
+	// Map student struct into student protobuf to be sended by the stream
+	for _, studentAnswer := range studentAnswers {
+		studentAnswer := &exampb.StudentAnswers{
+			QuestionId:    studentAnswer.QuestionId,
+			StudentAnswer: studentAnswer.StudentAnswer,
+			Correct:       studentAnswer.Correct,
+		}
+
+		// Send the student to the client
+		err := stream.Send(studentAnswer)
+
+		// Unnecessary code(Stream delay, Only to see the stream)
+		time.Sleep(1 * time.Second)
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
