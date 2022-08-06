@@ -42,3 +42,15 @@ CREATE TABLE qualifications (
     score VARCHAR(255) NOT NULL,
     FOREIGN KEY (fk_enrollment_id) REFERENCES enrollments(id)
 );
+
+DROP TABLE IF EXISTS student_answers;
+
+CREATE TABLE student_answers (
+    id VARCHAR(32) PRIMARY KEY,
+    fk_enrollment_id VARCHAR(32) NOT NULL,
+    question_id VARCHAR(32) NOT NULL,
+    student_answer VARCHAR(255) NOT NULL,
+    correct VARCHAR(255) NOT NULL,
+    FOREIGN KEY (fk_enrollment_id) REFERENCES enrollments(id)
+);
+
