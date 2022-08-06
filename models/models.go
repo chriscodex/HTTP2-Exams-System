@@ -27,3 +27,10 @@ type Question struct {
 	Answer   string `json:"answer"`
 	ExamId   string `json:"fk_exam_id"`
 }
+
+// Model of qualifications
+type Qualification struct {
+	Id           string `json:"id"`
+	Score        string `json:"score"`
+	EnrollmentId string `json:"fk_enrollment_id"`
+}

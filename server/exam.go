@@ -2,14 +2,15 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"io"
-	"log"
 	"time"
 
 	"github.com/ChrisCodeX/gRPC/exampb"
 	"github.com/ChrisCodeX/gRPC/models"
 	"github.com/ChrisCodeX/gRPC/repository"
 	"github.com/ChrisCodeX/gRPC/studentpb"
+	"github.com/segmentio/ksuid"
 )
 
 type ExamServer struct {
@@ -198,6 +199,7 @@ func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
 		return err
 	}
 
+	// Get enrollment from database
 	enrollment, err := s.repo.GetEnrollmentById(context.Background(), msg.GetEnrollmentId())
 	if err != nil {
 		return err
@@ -216,7 +218,7 @@ func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
 		return err
 	}
 
-	//
+	// Send questions
 	i := 0
 	var count uint16
 	var currentQuestion = &models.Question{}
@@ -239,6 +241,7 @@ func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
 			i++
 		}
 
+		// Validate answer
 		answer, err := stream.Recv()
 		if err == io.EOF {
 			return nil
@@ -249,37 +252,53 @@ func (s *ExamServer) TakeExam(stream exampb.ExamService_TakeExamServer) error {
 		if answer.GetAnswer() == currentQuestion.Answer {
 			count++
 		}
-		log.Println("Answer: ", answer.GetAnswer())
 	}
+
+	// Get the score
+	// Query Count
 	countQuestions, err := s.repo.GetCountQuestionsByExamId(context.Background(), enrollment.ExamId)
+
 	if err != nil {
 		return err
 	}
+
 	countQuest := float32(*countQuestions)
 	score := float32(float32(count) * 10 / countQuest)
-	log.Printf("Score: %.2f", score)
 
-	// scoreString := fmt.Sprintf("%f", score)
-	// err = s.repo.SetScore(context.Background(), enrollment.ExamId, scoreString)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return err
-	// }
+	// Generate random id
+	idRandom, err := ksuid.NewRandom()
+	if err != nil {
+		return err
+	}
+
+	// Map the score into qualification struct
+	qualification := &models.Qualification{
+		Id:           idRandom.String(),
+		Score:        fmt.Sprintf("%.2f", score),
+		EnrollmentId: enrollment.Id,
+	}
+
+	// Insert Qualification into database
+	err = s.repo.SetQualifications(context.Background(), qualification)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// func (s *ExamServer) GetScore(ctx context.Context, req *exampb.GetScoreRequest) (*exampb.GetScoreResponse, error) {
-// 	// Get exam from database
-// 	enrollment, err := s.repo.GetEnrollmentById(ctx, "m1")
-// 	if err != nil {
-// 		return nil, err
-// 	}
+// Get Qualification
+func (s *ExamServer) GetQualification(ctx context.Context, req *exampb.GetQualificationRequest) (*exampb.GetQualificationResponse, error) {
+	// Get exam from database
+	qualification, err := s.repo.GetQualificationsByEnrollmentId(ctx, req.GetFkEnrollmentId())
+	if err != nil {
+		return nil, err
+	}
 
-// 	// Map enrollment struct into GetScoreResponse message protobuf
-// 	return &exampb.GetScoreResponse{
-// 		EnrollmentId: enrollment.Id,
-// 		FkStudentId:  enrollment.StudentId,
-// 		FkExamId:     enrollment.ExamId,
-// 		Score:        enrollment.Score,
-// 	}, nil
-// }
+	// Map student struct into student protobuf
+	return &exampb.GetQualificationResponse{
+		Id:             qualification.Id,
+		FkEnrollmentId: qualification.EnrollmentId,
+		Score:          qualification.Score,
+	}, nil
+}

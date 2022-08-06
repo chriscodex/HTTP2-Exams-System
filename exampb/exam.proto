@@ -74,15 +74,14 @@ message TakeExamRequest {
     string answer = 2;
 }
 
-message GetScoreRequest {
-    string enrollment_id = 1;
+message GetQualificationRequest {
+    string fk_enrollment_id = 1;
 }
 
-message GetScoreResponse {
-    string enrollment_id = 1;
-    string fk_student_id = 2;
-    string fk_exam_id = 3;
-    string score = 4;
+message GetQualificationResponse {
+    string id = 1;
+    string fk_enrollment_id = 2;
+    string score = 3;
 }
 
 
@@ -112,6 +111,7 @@ service ExamService {
     rpc TakeExam(stream TakeExamRequest) returns (stream Question);
 
     // Unary
+    rpc GetQualification(GetQualificationRequest) returns (GetQualificationResponse);
     // rpc GetScore(GetScoreRequest) returns (GetScoreResponse);
 }
 

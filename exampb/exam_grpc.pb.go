@@ -38,7 +38,7 @@ type ExamServiceClient interface {
 	// Stream Bidirectional
 	TakeExam(ctx context.Context, opts ...grpc.CallOption) (ExamService_TakeExamClient, error)
 	// Unary
-	GetScore(ctx context.Context, in *GetScoreRequest, opts ...grpc.CallOption) (*GetScoreResponse, error)
+	GetQualification(ctx context.Context, in *GetQualificationRequest, opts ...grpc.CallOption) (*GetQualificationResponse, error)
 }
 
 type examServiceClient struct {
@@ -230,9 +230,9 @@ func (x *examServiceTakeExamClient) Recv() (*Question, error) {
 	return m, nil
 }
 
-func (c *examServiceClient) GetScore(ctx context.Context, in *GetScoreRequest, opts ...grpc.CallOption) (*GetScoreResponse, error) {
-	out := new(GetScoreResponse)
-	err := c.cc.Invoke(ctx, "/exam.ExamService/GetScore", in, out, opts...)
+func (c *examServiceClient) GetQualification(ctx context.Context, in *GetQualificationRequest, opts ...grpc.CallOption) (*GetQualificationResponse, error) {
+	out := new(GetQualificationResponse)
+	err := c.cc.Invoke(ctx, "/exam.ExamService/GetQualification", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +258,7 @@ type ExamServiceServer interface {
 	// Stream Bidirectional
 	TakeExam(ExamService_TakeExamServer) error
 	// Unary
-	GetScore(context.Context, *GetScoreRequest) (*GetScoreResponse, error)
+	GetQualification(context.Context, *GetQualificationRequest) (*GetQualificationResponse, error)
 	mustEmbedUnimplementedExamServiceServer()
 }
 
@@ -287,8 +287,8 @@ func (UnimplementedExamServiceServer) GetQuestionsPerExam(*GetQuestionsPerExamRe
 func (UnimplementedExamServiceServer) TakeExam(ExamService_TakeExamServer) error {
 	return status.Errorf(codes.Unimplemented, "method TakeExam not implemented")
 }
-func (UnimplementedExamServiceServer) GetScore(context.Context, *GetScoreRequest) (*GetScoreResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetScore not implemented")
+func (UnimplementedExamServiceServer) GetQualification(context.Context, *GetQualificationRequest) (*GetQualificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetQualification not implemented")
 }
 func (UnimplementedExamServiceServer) mustEmbedUnimplementedExamServiceServer() {}
 
@@ -459,20 +459,20 @@ func (x *examServiceTakeExamServer) Recv() (*TakeExamRequest, error) {
 	return m, nil
 }
 
-func _ExamService_GetScore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetScoreRequest)
+func _ExamService_GetQualification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetQualificationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ExamServiceServer).GetScore(ctx, in)
+		return srv.(ExamServiceServer).GetQualification(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/exam.ExamService/GetScore",
+		FullMethod: "/exam.ExamService/GetQualification",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExamServiceServer).GetScore(ctx, req.(*GetScoreRequest))
+		return srv.(ExamServiceServer).GetQualification(ctx, req.(*GetQualificationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -493,8 +493,8 @@ var ExamService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ExamService_SetExam_Handler,
 		},
 		{
-			MethodName: "GetScore",
-			Handler:    _ExamService_GetScore_Handler,
+			MethodName: "GetQualification",
+			Handler:    _ExamService_GetQualification_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

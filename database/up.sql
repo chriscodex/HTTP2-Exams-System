@@ -33,3 +33,12 @@ CREATE TABLE questions (
     answer VARCHAR(255) NOT NULL,
     FOREIGN KEY (fk_exam_id) REFERENCES exams(id)
 );
+
+DROP TABLE IF EXISTS qualifications;
+
+CREATE TABLE qualifications (
+    id VARCHAR(32) PRIMARY KEY,
+    fk_enrollment_id VARCHAR(32) NOT NULL,
+    score VARCHAR(255) NOT NULL,
+    FOREIGN KEY (fk_enrollment_id) REFERENCES enrollments(id)
+);

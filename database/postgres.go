@@ -209,34 +209,35 @@ func (repo *PostgresRepository) GetEnrollmentById(ctx context.Context, id string
 	return &enrollment, nil
 }
 
-// Set Score
-// func (repo *PostgresRepository) SetScore(ctx context.Context, enrollmentId string, score string) error {
-// 	_, err := repo.db.ExecContext(ctx, "UPDATE enrollments SET score = $1 WHERE id = $2",
-// 		score, enrollmentId)
-// 	return err
-// }
+// Set Qualifications
+func (repo *PostgresRepository) SetQualifications(ctx context.Context, qualification *models.Qualification) error {
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO qualifications (id, score, fk_enrollment_id) VALUES ($1, $2, $3)",
+		qualification.Id, qualification.Score, qualification.EnrollmentId)
+	return err
+}
 
-// // Get Score
-// func (repo *PostgresRepository) GetScore(ctx context.Context, enrollmentId string) (*models.Enrollment, error) {
-// 	// Query
-// 	rows, err := repo.db.QueryContext(ctx, "SELECT id, score, fk_exam_id, fk_student_id FROM enrollments WHERE id = $1", enrollmentId)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+// Get Qualifications
+func (repo *PostgresRepository) GetQualificationsByEnrollmentId(ctx context.Context, enrollmentId string) (*models.Qualification, error) {
+	// Query
+	rows, err := repo.db.QueryContext(ctx, "SELECT id, fk_enrollment_id, score FROM qualifications WHERE fk_enrollment_id = $1", enrollmentId)
+	if err != nil {
+		return nil, err
+	}
 
-// 	// Stop reading rows
-// 	defer CloseReadingRows(rows)
+	// Stop reading rows
+	defer CloseReadingRows(rows)
 
-// 	// Map rows values of the query into the students struct
-// 	var enrollment = models.Enrollment{}
+	// Map rows values of the query into the students struct
+	var qualification = models.Qualification{}
 
-// 	for rows.Next() {
-// 		if err = rows.Scan(&enrollment.Id, &enrollment.Score,&enrollment.ExamId, &enrollment.StudentId); err != nil {
-// 			return &enrollment, nil
-// 		}
-// 	}
-// 	if err = rows.Err(); err != nil {
-// 		return &enrollment, err
-// 	}
-// 	return &enrollment, nil
-// }
+	for rows.Next() {
+		if err = rows.Scan(&qualification.Id, &qualification.EnrollmentId, &qualification.Score); err != nil {
+			return &qualification, nil
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return &qualification, err
+	}
+
+	return &qualification, nil
+}
