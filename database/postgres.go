@@ -241,3 +241,34 @@ func (repo *PostgresRepository) GetQualificationsByEnrollmentId(ctx context.Cont
 
 	return &qualification, nil
 }
+
+// Set Student Answers
+func (repo *PostgresRepository) SetStudentAnswers(ctx context.Context, studentAnswers *models.StudentAnswers) error {
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO student_answers (id, fk_enrollment_id, question_id, student_answer, correct) VALUES ($1, $2, $3, $4, $5)",
+		studentAnswers.Id, studentAnswers.EnrollmentId, studentAnswers.QuestionId, studentAnswers.StudentAnswer, studentAnswers.Correct)
+	return err
+}
+
+// Get answers of students per enrollments
+func (repo *PostgresRepository) GetAnswersPerEnrollment(ctx context.Context, enrollmentId string) ([]*models.StudentAnswers, error) {
+	rows, err := repo.db.QueryContext(ctx, "SELECT id, fk_enrollment_id, question_id, student_answer, correct FROM student_answers WHERE fk_enrollment_id = $1", enrollmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Stop reading rows
+	defer CloseReadingRows(rows)
+
+	// Map rows of query into question struct
+	var studentAnswers []*models.StudentAnswers
+	for rows.Next() {
+		var studentAnswer = models.StudentAnswers{}
+		if err = rows.Scan(&studentAnswer.Id, &studentAnswer.EnrollmentId, &studentAnswer.QuestionId, &studentAnswer.StudentAnswer, &studentAnswer.Correct); err == nil {
+			studentAnswers = append(studentAnswers, &studentAnswer)
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return studentAnswers, nil
+}

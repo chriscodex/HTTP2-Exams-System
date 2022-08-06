@@ -40,8 +40,12 @@ type Repository interface {
 
 	// Get Qualifications
 	GetQualificationsByEnrollmentId(ctx context.Context, enrollmentId string) (*models.Qualification, error)
-	// Set Score
-	//SetScore(ctx context.Context, enrollmentId string, score string) error
+
+	// Set Student Answers
+	SetStudentAnswers(ctx context.Context, studentAnswers *models.StudentAnswers) error
+
+	// Get answers of students per enrollments
+	GetAnswersPerEnrollment(ctx context.Context, enrollmentId string) ([]*models.StudentAnswers, error)
 }
 
 // Assign Repository
@@ -113,4 +117,14 @@ func SetQualifications(ctx context.Context, qualification *models.Qualification)
 // Get Qualifications by Enrollment Id
 func GetQualificationsByEnrollmentId(ctx context.Context, enrollmentId string) (*models.Qualification, error) {
 	return implementation.GetQualificationsByEnrollmentId(ctx, enrollmentId)
+}
+
+// Set Student Answers
+func SetStudentAnswers(ctx context.Context, studentAnswers *models.StudentAnswers) error {
+	return implementation.SetStudentAnswers(ctx, studentAnswers)
+}
+
+// Get answers of students per enrollments
+func GetAnswersPerEnrollment(ctx context.Context, enrollmentId string) ([]*models.StudentAnswers, error) {
+	return implementation.GetAnswersPerEnrollment(ctx, enrollmentId)
 }
