@@ -34,3 +34,12 @@ type Qualification struct {
 	Score        string `json:"score"`
 	EnrollmentId string `json:"fk_enrollment_id"`
 }
+
+// Model of student answers
+type StudentAnswers struct {
+	Id            string `json:"id"`
+	EnrollmentId  string `json:"fk_enrollment_id"`
+	QuestionId    string `json:"question_id"`
+	StudentAnswer string `json:"student_answer"`
+	Correct       string `json:"correct"`
+}
