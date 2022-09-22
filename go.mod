@@ -1,4 +1,4 @@
-module git@github.com:ChrisCodeX/HTTP3-Exams-System.git
+module https://github.com/ChrisCodeX/HTTP3-Exams-System
 
 go 1.18
 
