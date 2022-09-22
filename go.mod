@@ -1,4 +1,4 @@
-module github.com/ChrisCodeX/gRPC
+module git@github.com:ChrisCodeX/HTTP3-Exams-System.git
 
 go 1.18
 
